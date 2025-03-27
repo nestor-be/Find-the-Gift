@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="es">
+	<head>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0"/>
+		<link rel="alternate icon" class="js-site-favicon" type="image/png" href="./img/gift.webp" />
+		<title>Find the Gift</title>
+		<script src="./js/browser@4.js"></script>
+		<link rel="stylesheet" href="./css/index.css" />
+		<link rel="stylesheet" href="./css/animate.min.css" />
+	</head>
+	<body class="overflow-hidden">
+		
+		<div class="flex justify-center bg-neutral-200">
+			<div class="container relative max-w-[1000px] h-screen bg-white"> 
+				<div id="content_modal"></div>
+				<div class="content relative"> 
+					<div class="flex justify-center">
+						<div class="text-2xl container-header grid grid-cols-3 items-center p-2 absolute top-[25px] w-full z-3">
+							<div class="flex justify-center" onclick="if(confirm('¿Deseas salir del juego?')){ ResetGame();Modal.Presentation();numberBoxFixed = '';is_nivel_fixed = false; }">
+								<span class="text-white hidden sm:block">Find the Gift</span>
+								<div class="sm:hidden flex flex-col items-center text-center justify-center">
+									<img src="./img/gift.webp" class="w-[50px]" style="filter: drop-shadow(0 0 0.75rem blue);" />
+									<span class="text-center text-[9px] block">Find the Gift</span>
+								</div>
+							</div>
+							<div class="text-center text-4xl text-slate-100 relative">
+								<span id="container_nivel">
+									<img src="https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fwww.icegif.com%2Fwp-content%2Fuploads%2F2024%2F05%2Fconfetti-icegif-2.gif&f=1&nofb=1&ipt=b1dbd9408a35d9416034ca33a080f6d8b368aad0a5260b81f9647c4acc5927e0&ipo=images" class="w-30 h-30 absolute top-[-25px] hidden">
+									<span id="number_nivel">15</span>
+								</span> 
+							</div>
+							<div class="container-opportunity-account flex gap-1">
+								<span class="star text-red-600 dm:text-2xl">&#x1F9E1;</span>
+								<span class="star text-red-600 dm:text-2xl">&#x1F9E1;</span>
+								<span class="star text-red-600 dm:text-2xl">&#x1F9E1;</span>						
+							</div>
+						</div>
+					</div>
+					<div class="h-[12vh]"></div>
+					<div class="container-main h-[80vh] flex flex-col justify-end">
+						<div class="container-box flex justify-evenly items-center flex-wrap gap-3 p-2" id="container_main">
+							<div class="w-20 h-20 box border-4 border-white border-dotted hidden" tabindex=0></div>
+							<div class="w-20 h-20 box border-4 border-white border-dotted hidden" tabindex=0></div> 
+						</div>
+					</div>
+					<div class="container-footer h-[8vh] flex items-center text-white justify-around">
+						<span class="font-thin" id="_difficulty">2025</span>
+						<span class="text-sm">&copy; BBJ</span>
+						<span class="font-thin" id="box_fixed">...</span>
+					</div>
+				</div>
+			</div>
+		</div>
+		
+		<script>
+			const w = window
+			const d = document
+			let life, total_niveles, time_interv, index_win, handlerTimeout, congratulation
+			let is_nivel_fixed = false
+			let numberBoxFixed = ''
+			let difficulty = {
+				label: 'Suave', value: -10
+			}
+			
+			congratulation = new Set()
+			    
+			const dataStatus = { 
+				"0": {index: 0, title: "Perdiste!", image: "lose.png"}, 
+				"1": {index: 1, title: "Ganaste!", image: "conffeti.gif"},
+				"2": {index: 2, title: "Game Over!", image: "lose.png"},
+				"3": {index: 3, title: "Cumplido!", image: "celebration.gif"},
+			}
+			
+			let tapSound = new Audio("./audio/tap.mp3")
+			let fanfarre = new Audio("./audio/fanfare.mp3")
+			let gameover = new Audio("./audio/gameover.mp3")
+			tapSound.volume = 0.4
+			fanfarre.volume = 0.4
+			gameover.volume = 0.4
+			
+			let twex = ["¡Vamos!", "¡Tú puedes!", "¡Ten animo!", "¡Buena suerte!"]
+			
+			let box = d.querySelectorAll(".box")
+			
+			const QuitModals = ( name ) => { 
+				if ( d.querySelector(`#${name}`) ) {
+					Modal.Delete(name)
+				} 
+			}
+			
+			const ResetGame = (func =() => {}) => {
+				["ComponentPresentation", "ComponentStatus", "ComponentCustom"].forEach( modal => QuitModals(modal) )
+				d.querySelectorAll(".star").forEach(e => e.innerHTML = '&#x1F9E1;')
+
+				life = 3
+				index_win = null
+				time_interv = 500 
+				total_niveles = 15 
+				handlerTimeout = false  
+				
+				number_nivel.innerText = total_niveles
+				d.querySelector("#container_main").innerHTML = ''
+				d.querySelector("#box_fixed").innerText = '•••'
+				d.querySelector("#_difficulty").innerText = difficulty.label
+				
+				if ( is_nivel_fixed ) { 
+					d.querySelector("#box_fixed").innerText = `Boxs: ${numberBoxFixed}`
+					for(let i=0;i<nivel_fixed;i++){
+						createBox()
+					}
+				} else {
+					numberBoxFixed = ''
+					for(let i=0;i<2;i++){
+						createBox()
+					}
+				} 
+				box = d.querySelectorAll(".box")
+				
+				congratulation = new Set()
+				for( let i=0;i<3;i++ ) {
+					congratulation.add( number_rand(15) )
+				}
+				
+				func()
+			}
+			
+			const number_rand = (max) => {
+				return Math.floor(Math.random() * max);
+			}
+				
+			const entryNivel = (event, e) => {
+				numberBoxFixed = parseInt(e.value)
+				if( /^[0-1]$/.test( e.value ) || numberBoxFixed > 15 ) {
+					is_nivel_fixed = false
+				} else { 
+					is_nivel_fixed = true 
+					nivel_fixed = numberBoxFixed 
+				}
+			}
+				
+			const ComponentPresentation = () => {
+				let container = d.createElement("div")
+				container.id = "ComponentPresentation"
+				container.classList.add("absolute", "top-0", "left-0", "w-full", "h-full")
+				let template = `
+					<div class="flex items-center justify-center absolute top-0 left-0 w-full h-full z-5 text-white" style="background: linear-gradient(#011a53, #0356b6);">
+						<div class="text-center flex justify-center flex-col items-center gap-3">
+							<img src="./img/gift.webp" class="w-[100px] block">
+							<br>
+							<h1 class="text-5xl DripOctober my-5 py-1">Find the Gift</h1>
+							<p class="font-bold">Adivinando encontrar la caja de regalo.</p>
+							<p class="font-thin text-[13px] pb-2">Un juego simple pero entretenido.</p>
+							
+							<button class="p-3 font-bold bg-blue-400 w-full my-2 text-2xl" onclick="Start()" tabindex='0' autofocus>Iniciar</button>
+						 
+							<select class="w-full p-3 border my-2 block" onchange="SelectionDificulty(this.value)">
+								<option class="text-black" value="-10 Suave">Suave</option>
+								<option class="text-black" value="-5035 Normal">Normal</option>
+								<option class="text-black" value="-30000 Dificil">Dificil</option>
+							</select> 
+							
+							<input class="w-full hover:border-white border border-transparent p-3 focus:text-blue-100 text-center" type="number" placeholder="Establecer nivel fijo" max="15" min="2" onblur="entryNivel(event, this)" />
+							<br /> 
+						</div>
+					</div>
+				`
+				
+				container.innerHTML = template
+				content_modal.appendChild(container)  
+			}
+			const SelectionDificulty = (e)=> { 
+				let data = e.split(" ")
+				let value = parseInt(data[0]);
+				let label = data[1]
+				
+				difficulty = {
+					label, value
+				} 
+			}
+			
+			const ComponentStatus = (value) => {
+				let container = d.createElement("div")
+				let dataComponent = dataStatus[value.toString()]
+				container.id = "ComponentStatus"
+				container.classList.add("absolute", "top-0", "left-0", "w-full", "h-full")
+				let template = `
+					<div class="${dataComponent.index == 1?`animate__animated animate__tada`:``} flex items-center justify-center absolute top-0 left-0 w-full p-3 h-full z-5" style="backdrop-filter: blur(15px);background: rgba(1,1,1,.5);" id="component_status_children">
+						<div class="text-center flex justify-center flex-col items-center text-white p-1">
+							<img src="./img/${dataComponent.image}" class="w-[100px] block">
+							<br>
+							<h1 class="text-5xl">${dataComponent.title}</h1> 
+							<br>
+							${dataComponent.index == 0?`<p>Nivel <b>${total_niveles}</b></p>`:``} 
+							${dataComponent.index == 1 && total_niveles == 1?`<b>Niveles completados!!!</b></b></p>`:``}
+							${dataComponent.index == 1 && total_niveles != 1?`<p>Siguiente nivel: <b>${total_niveles - 1}</b></p>`:``} 
+							${dataComponent.index == 2?`<p>Nivel actual: <b>${total_niveles}</b><br />
+								<p>Has perdido todas las oportunidades!</p></p>`:``}
+							${dataComponent.index == 3?`<p>¡Felicitaciones!<br> Has completado todos los niveles,<br>con <b class="font-bold text-green-300">${life} oportunidad${life>1?`es`:``} activa${life>1?`s`:``}</b>.</p>`:``}
+							<br />
+							${dataComponent.index == 3?``:`<button class="btn-status p-3 font-bold ${life == 0?'bg-red-600':'bg-blue-400'} w-full my-2 text-2xl rounded" tabindex='0' autofocus></button>`} 
+							<div class="py-2 w-full">
+								<button class="btn-status p-3 font-light border ${dataComponent.index == 2 || dataComponent.index == 3?'block':'hidden'} w-full text-2xl rounded m-2" tabindex='0' onclick="ResetGame();Modal.Presentation();numberBoxFixed = '';is_nivel_fixed = false;">Inicio</button>
+							</div>
+						</div> 
+					</div>
+				` 
+				container.innerHTML = template
+				content_modal.appendChild(container) 
+				
+				const btn = d.querySelectorAll(".btn-status")[0]
+				
+				if( dataComponent.index == 0 ) {
+					gameover.play()
+					btn.innerText = "Repetir"
+					btn.classList.add("animate__animated", "animate__bounceIn")
+				}
+				if( dataComponent.index == 1 ) {
+					fanfarre.play()
+					btn.innerText = "Siguiente"
+				} 
+				if( dataComponent.index == 2 ) {  
+					btn.innerText = "Volver a Jugar"
+				}
+				if( dataComponent.index == 1 && total_niveles <= 1 ) { 
+					btn.innerText = ""
+					btn.hidden = true
+					setTimeout(() => { 
+						Modal.Status(3)
+					}, 3000)
+				}
+				
+				if( number_rand(2) == 0 && dataComponent.index == 0 ) { ImageFixed({parentElem: "component_status_children", image: "bully.gif", position: "bottom-[-170px]"}) } 
+			
+				btn.addEventListener("click", () => {
+					if( total_niveles == 0 ) {
+						//alert("Congratulations!!!!!!!!!!")
+					} else {
+						switch (dataComponent.index) {
+							case 0:  
+								RepetirNivel();
+							break;
+							case 1: 
+								Modal.Delete("ComponentStatus");
+								setTimeout(() => {  
+									ComponentCustom({title: "Siguiente Nivel", image: "giphy.gif", text: "¿Estás listo?<br><br><button class='bg-green-200 shadow px-5 w-full block p-1 text-black font-bold' onclick='NextNivel()' tabindex='0' autofocus>Sí</button>"})
+								}, 1300) 
+							break;
+							case 2: 
+								ResetGame()
+								Start()
+							break;
+						}					
+					}
+				})
+			} 	
+			
+			const ImageFixed = ({parentElem, image, position, t}) => {
+				const csc = d.querySelector("#"+parentElem)
+				const img = d.createElement("img")
+				img.src = `./img/${image}`
+				img.classList.add("w-[200px]", "block", "fixed", `${position}`, "z-3")
+					
+				setTimeout(() => {
+					img.style.cssText = `transition: 1s;bottom: -0px`
+				}, 100)
+					
+				setTimeout(() => {
+					img.style.cssText = `transition: 1s;bottom: -140px` 
+				}, 2000)
+					
+				setTimeout(() => {
+					img.src="./img/vacio.png"
+					csc && csc.removeChild(img)
+				}, 2500)
+					
+				csc && csc.appendChild(img)				
+			}
+
+			const ComponentCustom = ({title, image, text}, funct = ()=>{}) => {
+				let container = d.createElement("div")
+				container.id = "ComponentCustom" 
+				container.classList.add("absolute", "top-0", "left-0", "w-full", "h-full")
+				let template = `
+					<div class="flex justify-center absolute top-0 left-0 w-full h-full z-5 text-white animate__animated animate__bounceIn" style="background: rgba(1,22,225,.5);">
+						<div class="text-center flex flex-col items-center">
+							<br>
+							<br>
+							<br>
+							<img src="./img/${image}" class="w-35 block position top-[3em]">
+
+							<h1 class="text-4xl DripOctober h1_custom">${title}</h1>
+							<p class="font-bold py-2">${text}</p>
+							<br /> 
+							<br /> 
+						</div>
+					</div>
+				`
+				setTimeout(() => {
+					document.querySelectorAll('.h1_custom')[0].classList.add("animate__animated", "animate__heartBeat")
+				}, 277)
+				container.innerHTML = template
+				content_modal.appendChild(container) 
+				funct(container)
+			}			
+			
+			const LoseLife = () => {
+				life = life - 1
+				d.querySelectorAll('.star')[life].innerHTML = '&#x1F90D;'
+			} 
+			
+			const UpdateInfo = () => {
+				total_niveles = total_niveles - 1
+				number_nivel.innerText = total_niveles
+				
+				if( congratulation.has(15 - total_niveles) ) {
+					d.querySelector("#container_nivel img").style.cssText = `display: block;left: ${number_nivel.offsetLeft-40}px;`
+					
+					setTimeout(() => {
+						d.querySelector("#container_nivel img").style.display = 'none'
+					}, 2999)
+				}
+				
+				number_nivel.addEventListener("animationend", () => {
+					number_nivel.classList.remove("effect-next-nivel")
+				})	
+				setTimeout(() => {
+					number_nivel.classList.add("effect-next-nivel")
+				}, 1200)
+			} 
+	 		
+			const Modal = {
+				Presentation() { ComponentPresentation() },
+				Status(e) { ComponentStatus(e) },
+				Custom(e, f) { ComponentCustom(e, f) },
+				Delete(name) { d.querySelector(`#${name}`) && content_modal.removeChild( d.querySelector(`#${name}`) ) },
+			}
+
+			const SetClassElements = ({element, action, selector}, func = ()=>{}) => {
+				d.querySelectorAll(`.${element}`).forEach(item => {
+					item.classList[action](selector)
+				})
+				func()
+			}
+ 		
+			const Selectioned = (event) => {
+				tapSound.play()
+				box[index_win].style.backgroundImage = "url('./img/gift.webp')"
+				
+				if( event.target.getAttribute("data-index") == index_win ) {
+					event.target.classList.add("animate__animated","animate__rubberBand")
+				} else {
+					event.target.classList.add("animate__animated","animate__headShake")
+				}
+			
+				setTimeout(() => {
+					event.target.classList.remove("animate__headShake", "animate__rubberBand")
+					if( event.target.getAttribute("data-index") == index_win ) {
+						Modal.Status(1) 
+					} else {
+						Modal.Status(0)
+						LoseLife() 
+					}
+				}, 1200)
+				removeClickSeleccion()
+			}
+		
+			const allowClickSeleccion = () => {
+				d.querySelectorAll(`.box`).forEach((item, index) => {
+					item.setAttribute("data-index", index) 
+					item.addEventListener("click", Selectioned)
+				})
+			}
+			
+			const removeClickSeleccion = () => {
+				d.querySelectorAll(`.box, .box-win`).forEach((item, index) => {
+					item.removeEventListener("click", Selectioned)
+					item.setAttribute("style","")
+					item.removeAttribute("style")
+				})
+			}
+			
+			const createBox = () => {
+				let newBox = d.createElement("div")
+				newBox.classList.add("w-20", "h-20", "border-4", "border-white", "border-dotted", "box") 
+				newBox.tabindex=0
+				container_main.appendChild(newBox) 
+			}
+			
+			const RepetirNivel = () => {
+				Modal.Delete("ComponentStatus")
+				if ( life > 0 ) {  
+					ComponentCustom({title: twex[number_rand(twex.length)], image: "vacio.png", text: "¿Estás listo?"})
+					setTimeout(() => {
+						Modal.Delete("ComponentCustom")
+						time_interv = 500
+						handlerTimeout = false
+						MoveHideGift()
+					}, 1600)
+				} else {
+					Modal.Status(2)
+				}
+			}
+			
+			const NextNivel = () => { 
+				if ( is_nivel_fixed == false ) { createBox() }
+				Modal.Delete("ComponentCustom")
+				ComponentCustom({title: `Nivel ${total_niveles - 1}`, image: "vacio.png", text: ""})
+				setTimeout(() => {
+					Modal.Delete("ComponentCustom")
+					box = d.querySelectorAll(".box")
+					time_interv = 500
+					handlerTimeout = false
+					MoveHideGift()
+					UpdateInfo()	
+				}, 3000)
+			}
+			
+			const MoveHideGift = () => {
+				tapSound.play()
+				time_interv = ++time_interv - (difficulty.label=='Dificil'?111:50)
+				index_win = number_rand(box.length) 
+								 
+				SetClassElements({element: "box", action: "remove", selector: "box-win"}) 
+				box[index_win].classList.add("box-win")
+				if(handlerTimeout == false) {setTimeout(MoveHideGift, time_interv)}
+				
+				if ( time_interv < difficulty.value ) {  //-5035
+					box[index_win].style.backgroundImage = "url('')"
+					handlerTimeout = true
+					allowClickSeleccion()
+				}
+			}
+			
+			const Start = () => { 
+				tapSound.play()
+				ResetGame()
+				Modal.Delete("ComponentPresentation")
+				
+				ComponentCustom({title: "¡Buena suerte!", image: "vacio.png", text: "Atina siempre al correcto"})
+				setTimeout(() => {
+					Modal.Delete("ComponentCustom") 
+				}, 1950)				
+		
+				setTimeout(() => SetClassElements({element: "box", action: "remove", selector: "hidden"}, () => { 
+					setTimeout( MoveHideGift, 1250 )
+				}), 2000) 
+			}
+			
+			w.addEventListener("load", () => {  
+				//Modal.Status(2)
+				Modal.Presentation()
+			})
+			
+			//https://nestor-be.github.io/Find-the-Gift/
+		</script>
+		
+	</body>
+</html>

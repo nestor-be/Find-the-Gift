@@ -1,0 +1,57 @@
+@font-face {
+	font-family: Samurai;
+	src: url(font/Samurai.otf);
+}
+
+@font-face {
+	font-family: DripOctober;
+	src: url(font/DripOctober.ttf);
+}
+
+* { 
+	margin: 0;
+	box-sizing: border-box;
+}
+
+.Samurai {
+	font-family: Samurai;
+}
+.DripOctober {
+	font-family: DripOctober;
+}
+
+.container { 
+	background: rgb(255,234,197);
+	background-image:url(../img/paisaje.jpg);
+	background-size: 1000px 1000px;
+	background-repeat:no-repeat;
+	background-position: center bottom;	 
+	background-attachment: fixed !important;
+}
+
+.box, button:focus {
+	box-shadow: 0 2px 4px black;
+}
+
+.box:hover {
+	/*transform: scale(1.2);*/
+	filter: drop-shadow(0 0 0.75rem crimson);
+}
+
+.box-win {
+	/*border: 3px double red;*/
+	background-image: url(../img/gift.webp);
+	background-size: cover;
+	background-position: center center;
+	background-repeat: no-repeat;
+}
+
+.effect-next-nivel {
+	animation: repeat_zoom 444ms 2;
+}
+@keyframes repeat_zoom {
+	25% {
+		transform: translateY(5px) scale(1.3); 
+	}
+	50% {color: "white"}
+}
